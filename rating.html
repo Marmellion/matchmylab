@@ -497,5 +497,37 @@
   setTrack('bio');
 </script>
 
+<script>
+  // floating bubbles
+  const container = document.getElementById('bubbles-container');
+  const colors = ['turquoise', 'pink', 'mint'];
+ 
+  function spawnBubble(){
+    const b = document.createElement('div');
+    const size = 20 + Math.random() * 70;
+    const duration = 14 + Math.random() * 12;
+    const delay = Math.random() * 6;
+    b.className = 'bubble ' + colors[Math.floor(Math.random()*colors.length)];
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = Math.random() * 100 + 'vw';
+    b.style.animationDuration = duration + 's';
+    b.style.animationDelay = delay + 's';
+    b.addEventListener('click', () => {
+      b.classList.add('pop');
+      setTimeout(() => b.remove(), 350);
+    });
+    container.appendChild(b);
+  }
+ 
+  for(let i = 0; i < 14; i++){ spawnBubble(); }
+ 
+  setInterval(() => {
+    if(document.querySelectorAll('.bubble').length < 16){
+      spawnBubble();
+    }
+  }, 3000);
+</script>
+
 </body>
 </html>
