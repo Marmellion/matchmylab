@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рейтинг вузов — Match my lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --turquoise: #2ec4b6;
+    --turquoise-soft: #d6f6f3;
+    --pink: #ff8fa8;
+    --pink-soft: #ffe4ec;
+    --mint: #a7ecb8;
+    --mint-soft: #e6fbec;
+    --white: #ffffff;
+    --ink: #14171a;
+    --radius-lg: 42px;
+    --radius-md: 28px;
+    --radius-sm: 18px;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--white);
+    color: var(--ink);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+
+  h1,h2,h3, .pixel{
+    font-family: 'Silkscreen', monospace;
+    line-height: 1.35;
+    letter-spacing: 0.5px;
+  }
+
+  a{ color: inherit; }
+  ::selection{ background: var(--pink); color: var(--ink); }
+
+  /* ---------- floating bubbles background ---------- */
+  #bubbles-container{
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bubble{
+    position: absolute;
+    bottom: -140px;
+    border-radius: 50%;
+    opacity: 0.5;
+    pointer-events: auto;
+    cursor: pointer;
+    animation-name: float-up;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    filter: blur(0.2px);
+  }
+  .bubble.turquoise{ background: radial-gradient(circle at 30% 30%, #ffffff, var(--turquoise-soft) 40%, var(--turquoise) 100%); }
+  .bubble.pink{ background: radial-gradient(circle at 30% 30%, #ffffff, var(--pink-soft) 40%, var(--pink) 100%); }
+  .bubble.mint{ background: radial-gradient(circle at 30% 30%, #ffffff, var(--mint-soft) 40%, var(--mint) 100%); }
+  .bubble.pop{
+    animation: none !important;
+    transition: transform .35s ease, opacity .35s ease;
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  @keyframes float-up{
+    0%   { transform: translate(0,0) scale(1); }
+    50%  { transform: translate(24px, -55vh) scale(1.05); }
+    100% { transform: translate(-10px, -115vh) scale(0.95); }
+  }
+
+  /* ---------- layout shell ---------- */
+  .wrap{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 28px;
+    position: relative;
+    z-index: 1;
+  }
+  section{ position: relative; z-index: 1; }
+
+  /* ---------- nav ---------- */
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 18px 0;
+    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.75);
+  }
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .logo{
+    font-size: 1.05rem;
+    padding: 10px 20px;
+    background: var(--ink);
+    color: var(--white);
+    border-radius: 999px;
+    white-space: nowrap;
+    text-decoration:none;
+  }
+  nav ul{ list-style:none; display:flex; gap:8px; padding:0; margin:0; flex-wrap: wrap; }
+  nav a{
+    text-decoration:none;
+    font-weight:600;
+    font-size: 0.92rem;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  nav a:hover{ border-color: var(--ink); background: var(--mint-soft); }
+  nav a.current{ border-color: var(--ink); background: var(--turquoise-soft); }
+
+  /* ---------- hero ---------- */
+  .rating-hero{ padding: 60px 0 20px; }
+  .rating-hero h1{ font-size: clamp(1.8rem, 4vw, 2.8rem); margin: 0 0 18px; }
+  .rating-hero p.lead{ max-width: 68ch; font-size: 1.08rem; margin: 0 0 10px; }
+  .pill-tags{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 26px; }
+  .pill-tags span{
+    background: var(--white);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .btn{
+    display:inline-block;
+    text-decoration:none;
+    font-weight:700;
+    font-size: 0.95rem;
+    padding: 12px 26px;
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+    background: var(--turquoise);
+    color: var(--ink);
+    transition: transform .18s ease, box-shadow .18s ease;
+    cursor:pointer;
+  }
+  .btn:hover{ transform: translateY(-3px) rotate(-1deg); box-shadow: 6px 6px 0 var(--ink); }
+  .btn.pink{ background: var(--pink); }
+  .btn.mint{ background: var(--mint); }
+  .btn.ghost{ background: var(--white); }
+
+  /* ---------- filter bar ---------- */
+  .filter-card{
+    background: var(--white);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-md);
+    padding: 26px 28px;
+    margin: 20px 0 40px;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 24px;
+    align-items:flex-end;
+  }
+  .filter-group{ display:flex; flex-direction:column; gap:10px; }
+  .filter-group label{ font-weight:700; font-size: 0.85rem; }
+
+  .track-toggle{ display:flex; gap:10px; flex-wrap:wrap; }
+  .track-btn{
+    border: 2px solid var(--ink);
+    background: var(--white);
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-weight:700;
+    font-family:'Quicksand',sans-serif;
+    cursor:pointer;
+    font-size: 0.92rem;
+    transition: background .18s ease, transform .18s ease;
+  }
+  .track-btn:hover{ transform: translateY(-2px); }
+  .track-btn.active.bio{ background: var(--turquoise); }
+  .track-btn.active.bioinf{ background: var(--pink); }
+
+  select, .range-wrap{ font-family:'Quicksand', sans-serif; }
+  select{
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 0.92rem;
+    font-weight:600;
+    background: var(--white);
+    color: var(--ink);
+    min-width: 200px;
+    cursor:pointer;
+  }
+
+  .range-wrap{ display:flex; flex-direction:column; gap:8px; min-width: 240px; }
+  input[type="range"]{
+    -webkit-appearance:none;
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--mint-soft);
+    border: 2px solid var(--ink);
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width: 22px; height:22px;
+    border-radius:50%;
+    background: var(--pink);
+    border: 2px solid var(--ink);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width: 22px; height:22px;
+    border-radius:50%;
+    background: var(--pink);
+    border: 2px solid var(--ink);
+    cursor:pointer;
+  }
+  .range-value{ font-weight:700; font-size: 0.9rem; }
+
+  .results-count{ font-weight:700; margin: 0 0 20px; }
+
+  /* ---------- university cards ---------- */
+  .uni-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+    padding-bottom: 80px;
+  }
+  .uni-card{
+    background: var(--white);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-md);
+    padding: 24px 26px;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .uni-card:hover{ transform: translateY(-5px) rotate(-0.4deg); box-shadow: 7px 7px 0 var(--ink); }
+
+  .uni-badges{ display:flex; gap:8px; margin-bottom: 14px; flex-wrap:wrap; }
+  .badge{
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+  }
+  .badge.bio{ background: var(--turquoise-soft); }
+  .badge.bioinf{ background: var(--pink-soft); }
+  .badge.city{ background: var(--mint-soft); }
+
+  .uni-card h3{ font-size: 1rem; margin: 0 0 8px; }
+  .uni-card .program-name{ font-size: 0.92rem; font-weight:700; opacity:0.75; margin: 0 0 12px; }
+  .uni-card .price-line{ font-weight:700; margin: 0 0 14px; }
+  .uni-card .tag-link{
+    font-weight: 700;
+    text-decoration: none;
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 2px;
+    font-size: 0.9rem;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding: 60px 20px;
+    font-weight:700;
+    opacity: 0.7;
+  }
+
+  .band{ padding: 50px 0 70px; }
+  .band.tint-mint{ background: var(--mint-soft); border-radius: var(--radius-lg); }
+
+  footer{
+    text-align:center;
+    padding: 30px 0 50px;
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 860px){
+    .uni-grid{ grid-template-columns: 1fr; }
+    .filter-card{ flex-direction:column; align-items:stretch; }
+  }
+</style>
+</head>
+<body>
+
+<div id="bubbles-container"></div>
+
+<header>
+  <div class="wrap nav-row">
+    <a class="logo pixel" href="index.html">match my lab</a>
+    <nav>
+      <ul>
+        <li><a href="index.html#mission">Миссия</a></li>
+        <li><a href="index.html#offerings">Что у нас есть</a></li>
+        <li><a href="rating.html" class="current">Рейтинг вузов</a></li>
+        <li><a href="index.html#cult">Cult the lab</a></li>
+        <li><a href="index.html#contacts">Контакты</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="rating-hero wrap">
+    <div class="pill-tags">
+      <span>Магистратура</span>
+      <span>Биология</span>
+      <span>Биоинформатика</span>
+    </div>
+    <h1>Рейтинг вузов</h1>
+    <p class="lead">Мы собрали магистерские программы по биологии и биотехнологии, а также по биоинформатике — специально для действующих студентов, которые уже думают о следующей ступени. Все программы — именно магистратура, никакого бакалавриата и колледжей.</p>
+    <p class="lead">Список не претендует на полноту: мы намеренно оставили только вузы с сильной научной репутацией, без случайных региональных программ. Если хотите предложить вуз, который мы пропустили — напишите нам, контакты внизу страницы.</p>
+  </section>
+
+  <section class="wrap">
+    <div class="filter-card">
+      <div class="filter-group">
+        <label>Направление</label>
+        <div class="track-toggle">
+          <button class="track-btn active bio" id="btn-bio" type="button">Биология</button>
+          <button class="track-btn bioinf" id="btn-bioinf" type="button">Биоинформатика</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="city-select">Город</label>
+        <select id="city-select"></select>
+      </div>
+
+      <div class="filter-group">
+        <label for="price-range">Стоимость обучения, до</label>
+        <div class="range-wrap">
+          <input type="range" id="price-range" min="150000" max="700000" step="10000" value="700000">
+          <span class="range-value" id="price-range-value">до 700 000 ₽/год</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="results-count" id="results-count"></p>
+    <div class="uni-grid" id="uni-grid"></div>
+  </section>
+
+  <section class="band tint-mint" id="contacts">
+    <div class="wrap" style="text-align:center;">
+      <h2 style="font-size: clamp(1.3rem, 2.4vw, 1.8rem); margin:0 0 14px;">Не нашли свой вуз?</h2>
+      <p class="lead" style="margin-left:auto; margin-right:auto;">Список живой — мы будем дополнять его. Предложите программу или пришлите правку по почте или в телеграм.</p>
+      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:24px;">
+        <a class="btn" href="mailto:hello@matchmylab.ru">Написать на почту</a>
+        <a class="btn ghost" href="https://t.me/science_smm" target="_blank" rel="noopener">Телеграм @science_smm</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">Match my lab — инициатива, созданная студентами для студентов.</div>
+</footer>
+
+<script>
+  // ---------- floating bubbles (shared with main page) ----------
+  const container = document.getElementById('bubbles-container');
+  const bubbleColors = ['turquoise', 'pink', 'mint'];
+  function spawnBubble(){
+    const b = document.createElement('div');
+    const size = 20 + Math.random() * 70;
+    const duration = 14 + Math.random() * 12;
+    const delay = Math.random() * 6;
+    b.className = 'bubble ' + bubbleColors[Math.floor(Math.random()*bubbleColors.length)];
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = Math.random() * 100 + 'vw';
+    b.style.animationDuration = duration + 's';
+    b.style.animationDelay = delay + 's';
+    b.addEventListener('click', () => {
+      b.classList.add('pop');
+      setTimeout(() => b.remove(), 350);
+    });
+    container.appendChild(b);
+  }
+  for(let i = 0; i < 12; i++){ spawnBubble(); }
+  setInterval(() => {
+    if(document.querySelectorAll('.bubble').length < 14){ spawnBubble(); }
+  }, 3200);
+
+  // ---------- university data ----------
+  // price: number in rubles/year for filtering, or null if not published ("цена по запросу")
+  const universities = [
+    // ---- БИОЛОГИЯ / БИОТЕХНОЛОГИЯ ----
+    { track:'bio', name:'МГУ им. М.В. Ломоносова', program:'Магистратура по биологии', city:'Москва', price:574240, priceLabel:'от 574 000 ₽/год', link:'https://russia.ucheba.ru/uz/1153' },
+    { track:'bio', name:'Первый МГМУ им. И.М. Сеченова (Сеченовский Университет)', program:'Магистратура по биологии', city:'Москва', price:451000, priceLabel:'451 000 ₽/год', link:'https://russia.ucheba.ru/uz/5833' },
+    { track:'bio', name:'Российский биотехнологический университет (РОСБИОТЕХ)', program:'Магистратура по биотехнологии', city:'Москва', price:450000, priceLabel:'450 000 ₽/год', link:'https://russia.ucheba.ru/uz/5879' },
+    { track:'bio', name:'РГАУ-МСХА им. К.А. Тимирязева', program:'Магистратура по биологии', city:'Москва', price:406600, priceLabel:'406 600 ₽/год', link:'https://russia.ucheba.ru/uz/5836' },
+    { track:'bio', name:'СПбГУ', program:'Магистратура по биологии', city:'Санкт-Петербург', price:364600, priceLabel:'364 600 ₽/год', link:'https://russia.ucheba.ru/uz/10564' },
+    { track:'bio', name:'Университет ИТМО', program:'Магистратура по биологии', city:'Санкт-Петербург', price:580000, priceLabel:'580 000 ₽/год', link:'https://russia.ucheba.ru/uz/6213' },
+    { track:'bio', name:'Научно-технологический университет «Сириус»', program:'Магистратура по биологии', city:'Сочи', price:null, priceLabel:'цена по запросу', link:'https://russia.ucheba.ru/uz/110737' },
+    { track:'bio', name:'Казанский федеральный университет', program:'Магистратура по биологии', city:'Казань', price:235956, priceLabel:'235 956 ₽/год', link:'https://russia.ucheba.ru/uz/6264' },
+    { track:'bio', name:'Новосибирский государственный университет', program:'Магистратура по биологии', city:'Новосибирск', price:302500, priceLabel:'302 500 ₽/год', link:'https://russia.ucheba.ru/uz/6285' },
+    { track:'bio', name:'Томский государственный университет', program:'Магистратура по биологии', city:'Томск', price:262000, priceLabel:'262 000 ₽/год', link:'https://russia.ucheba.ru/uz/20527' },
+    { track:'bio', name:'Дальневосточный федеральный университет', program:'Магистратура по биологии', city:'Владивосток', price:310000, priceLabel:'от 310 000 ₽/год', link:'https://russia.ucheba.ru/uz/18626' },
+    { track:'bio', name:'Уральский федеральный университет', program:'Магистратура по биологии', city:'Екатеринбург', price:255000, priceLabel:'255 000 ₽/год', link:'https://russia.ucheba.ru/uz/6258' },
+    { track:'bio', name:'Южный федеральный университет', program:'Магистратура по биологии', city:'Ростов-на-Дону', price:185000, priceLabel:'185 000 ₽/год', link:'https://russia.ucheba.ru/uz/10582' },
+    { track:'bio', name:'Самарский университет им. академика С.П. Королева', program:'Магистратура по биологии', city:'Самара', price:218760, priceLabel:'218 760 ₽/год', link:'https://russia.ucheba.ru/uz/10805' },
+
+    // ---- БИОИНФОРМАТИКА ----
+    { track:'bioinf', name:'Университет ИТМО', program:'Биоинформатика и системная биология', city:'Санкт-Петербург', price:680000, priceLabel:'680 000 ₽/год', link:'https://abit.itmo.ru/program/master/bioinformatics' },
+    { track:'bioinf', name:'НИУ ВШЭ — Санкт-Петербург', program:'Вычислительная биология и биоинформатика (совместно с BIOCAD)', city:'Санкт-Петербург', price:null, priceLabel:'цена по запросу, 7 бюджетных мест', link:'https://spb.hse.ru/ma/bioinformatics/' },
+    { track:'bioinf', name:'НИУ ВШЭ — Москва', program:'Анализ данных в биологии и медицине', city:'Москва', price:null, priceLabel:'цена по запросу', link:'https://www.hse.ru/ma/adbm/' },
+    { track:'bioinf', name:'Томский государственный университет (ВИШ «Агробиотек»)', program:'Bioinformatics', city:'Томск', price:412000, priceLabel:'412 000 ₽/год', link:'https://agrobiotek.tsu.ru/bioinformatics' },
+    { track:'bioinf', name:'Томский НИМЦ', program:'Биоинформатика: мультиомика единичных клеток', city:'Томск', price:null, priceLabel:'цена по запросу', link:'https://master-omics.ru/abiturient/programs/biomics/' },
+    { track:'bioinf', name:'ННГУ им. Н.И. Лобачевского', program:'Биоинформатика', city:'Нижний Новгород', price:null, priceLabel:'5 бюджетных мест, цена по запросу', link:'https://ibbm.unn.ru/bioinformatika-magisterskaya-programma-2025/' },
+    { track:'bioinf', name:'РНИМУ им. Н.И. Пирогова (МБФ)', program:'Медицинская биоинформатика', city:'Москва', price:null, priceLabel:'цена по запросу', link:'https://mbf.msk.ru/bioinformatika.shtml' },
+  ];
+
+  // ---------- state ----------
+  let currentTrack = 'bio';
+
+  const btnBio = document.getElementById('btn-bio');
+  const btnBioinf = document.getElementById('btn-bioinf');
+  const citySelect = document.getElementById('city-select');
+  const priceRange = document.getElementById('price-range');
+  const priceRangeValue = document.getElementById('price-range-value');
+  const grid = document.getElementById('uni-grid');
+  const resultsCount = document.getElementById('results-count');
+
+  function formatPrice(n){
+    return 'до ' + n.toLocaleString('ru-RU') + ' ₽/год';
+  }
+
+  function populateCities(){
+    const cities = Array.from(new Set(universities.filter(u => u.track === currentTrack).map(u => u.city))).sort();
+    citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+
+  function render(){
+    const city = citySelect.value;
+    const maxPrice = Number(priceRange.value);
+    priceRangeValue.textContent = formatPrice(maxPrice);
+
+    const filtered = universities.filter(u => {
+      if(u.track !== currentTrack) return false;
+      if(city !== 'all' && u.city !== city) return false;
+      if(u.price !== null && u.price > maxPrice) return false;
+      return true;
+    });
+
+    resultsCount.textContent = 'Найдено программ: ' + filtered.length;
+
+    if(filtered.length === 0){
+      grid.innerHTML = '<div class="empty-state">Под такие фильтры пока ничего не нашлось — попробуйте расширить диапазон или выбрать другой город.</div>';
+      return;
+    }
+
+    grid.innerHTML = filtered.map(u => `
+      <div class="uni-card">
+        <div class="uni-badges">
+          <span class="badge ${u.track === 'bio' ? 'bio' : 'bioinf'}">${u.track === 'bio' ? 'Биология' : 'Биоинформатика'}</span>
+          <span class="badge city">${u.city}</span>
+        </div>
+        <h3>${u.name}</h3>
+        <p class="program-name">${u.program}</p>
+        <p class="price-line">${u.priceLabel}</p>
+        <a class="tag-link" href="${u.link}" target="_blank" rel="noopener">Подробнее о программе →</a>
+      </div>
+    `).join('');
+  }
+
+  function setTrack(track){
+    currentTrack = track;
+    btnBio.classList.toggle('active', track === 'bio');
+    btnBioinf.classList.toggle('active', track === 'bioinf');
+    populateCities();
+    render();
+  }
+
+  btnBio.addEventListener('click', () => setTrack('bio'));
+  btnBioinf.addEventListener('click', () => setTrack('bioinf'));
+  citySelect.addEventListener('change', render);
+  priceRange.addEventListener('input', render);
+
+  setTrack('bio');
+</script>
+
+</body>
+</html>
